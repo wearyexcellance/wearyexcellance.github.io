@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <button id="returnbutton" onclick="window.location.href='../home'">
+            Return
+            </button>
+        <meta charset='utf8'>
+    </head>
+    <body>
+        <div id='ruffle'></div>
+        <script src='ruffle.js'></script>
+        <script>
+var swfobject = {};
+const urlParams = new URLSearchParams(window.location.search);
+	var swfName = "../games/"+urlParams.get("swf");
+
+swfobject.embedSWF = function(url, cont, width, height){
+    var ruffle = window.RufflePlayer.newest(),
+        player = Object.assign(document.getElementById(cont).appendChild(ruffle.createPlayer()), {
+            width: width,
+            height: height,
+            style: 'width: ' + width + 'px; height: ' + height + 'px',
+        });
+    
+    player.load({ url: url });
+}
+
+swfobject.embedSWF(swfName, 'ruffle', 500, 500);
+        </script>
+    </body>
+</html>
