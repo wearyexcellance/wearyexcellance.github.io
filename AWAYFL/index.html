@@ -44,7 +44,7 @@
     </div>
 	<script>
 const urlParams = new URLSearchParams(window.location.search);
-	var swfName = "../games/"+urlParams.get("swf");
+	var swfName = ""+urlParams.get("swf");
 		if (!swfName) {
 			swfName = 'default.swf';
 		}
