@@ -5,7 +5,7 @@ function display_gamelist(gamename) {
     var waflashbutton = document.createElement("button"); // Assuming you want to create a button
     var awayflbutton = document.createElement("button"); // Assuming you want to create a button
     var avm2jsbutton = document.createElement("button"); // Assuming you want to create a button
-    var suffix = "/index.html?swf="+gamename
+    var suffix = "/index.html?swf=https://wearyexcellance.github.io/Games/"+gamename
 
     gametext.textContent = gamename;
     
