@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="style.css">
 <script type="text/javascript">
 const urlParams = new URLSearchParams(window.location.search);
-	var swfName = "../games/"+urlParams.get("swf");
+	var swfName = ""+urlParams.get("swf");
 		if (!swfName) {swfName = "default.swf";}
 		var swfURLObj = new URL(swfName, document.baseURI);
 		swfURL = swfURLObj.toString();
