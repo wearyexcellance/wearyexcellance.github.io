@@ -146,7 +146,7 @@ Return
     function start()
     {
 	const urlParams = new URLSearchParams(window.location.search);
-	var swfName = "../games/"+urlParams.get("swf");
+	var swfName = ""+urlParams.get("swf");
 	if (!swfName) {swfName = "../games/"+"MountainManiac.swf";}
 	var swfURL = new URL(swfName, window.location.href);
         window.actictn = document.getElementById("actigamectn");
