@@ -6,7 +6,7 @@ function display_gamelist(gamename,width,height) {
     var awayflbutton = document.createElement("button"); // Assuming you want to create a button
     var avm2jsbutton = document.createElement("button"); // Assuming you want to create a button
     //var suffix = "/index.html?swf="+gamename+ `&width=${width}&height=${height}`
-    var suffix = "/index.html?swf=https://wearyexcellance.github.io/"+gamename+`&width=${width}&height=${height}`
+    var suffix = "/index.html?swf=https://wearyexcellance.github.io/Games/"+gamename+`&width=${width}&height=${height}`
 
     gametext.textContent = gamename;
     
