@@ -12,7 +12,9 @@
         <script>
 var swfobject = {};
 const urlParams = new URLSearchParams(window.location.search);
-	var swfName = ""+urlParams.get("swf");
+	var swfName = "../games/"+urlParams.get("swf");
+	var width = parseInt(urlParams.get("width"));
+    var height = parseInt(urlParams.get("height")); 
 
 swfobject.embedSWF = function(url, cont, width, height){
     var ruffle = window.RufflePlayer.newest(),
@@ -21,11 +23,11 @@ swfobject.embedSWF = function(url, cont, width, height){
             height: height,
             style: 'width: ' + width + 'px; height: ' + height + 'px',
         });
-    
+        player.config = {"logLevel": "trace"}
     player.load({ url: url });
 }
 
-swfobject.embedSWF(swfName, 'ruffle', 1000, 500);
+swfobject.embedSWF(swfName, 'ruffle', width, height);
         </script>
     </body>
 </html>
