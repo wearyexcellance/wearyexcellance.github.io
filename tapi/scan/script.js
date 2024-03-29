@@ -2,6 +2,7 @@
 function onScanSuccess(qrCodeMessage) {
   document.getElementById("result").innerHTML =
     '<span class="result">' + qrCodeMessage + "</span>";
+  GMWEBVIEW.push(qrCodeMessage)
 }
 
 // When scan is unsuccessful fucntion will produce error message
