@@ -6,15 +6,14 @@
   <title>QR Code Reader</title>
   <style>
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       height: 100vh;
-      background-color: #333; /* Dark gray background */
-      color: #fff; /* White text color */
+      background-color: #f0f0f0;
     }
 
     .container {
@@ -29,18 +28,17 @@
     #result {
       font-size: 24px;
       padding: 20px;
-      background-color: #444; /* Slightly lighter gray */
+      background-color: #fff;
       border-radius: 10px;
-      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); /* White shadow for contrast */
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
     }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>QR Code Reader</h1>
   <div id="reader"></div>
-  <div id="result">Scan result will appear here</div>
+  <div id="result"></div>
 </div>
 
 <script src='https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.2.0/html5-qrcode.min.js'></script>
