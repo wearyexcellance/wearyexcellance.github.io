@@ -1,15 +1,17 @@
 h1 {
   text-align: center;
+  font-size: 36px; /* Increase font size */
 }
 
 #reader {
-  width: 500px;
+  width: 800px; /* Increase width */
 }
 
 .result {
   background-color: green;
   color: #fff;
-  padding: 20px;
+  padding: 40px; /* Increase padding */
+  font-size: 24px; /* Increase font size */
 }
 
 .row {
@@ -18,4 +20,6 @@ h1 {
 
 #reader__scan_region {
   background: white;
+  height: 400px; /* Increase height */
+  width: 600px; /* Increase width */
 }
