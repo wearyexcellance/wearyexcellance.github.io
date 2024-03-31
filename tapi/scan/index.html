@@ -1,28 +1,48 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CodePen - QR Code Reader - Javascript</title>
-  <link rel="stylesheet" href="./style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Reader</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background-color: #f0f0f0;
+    }
 
+    .container {
+      text-align: center;
+    }
+
+    #reader {
+      width: 80%;
+      margin-bottom: 20px;
+    }
+
+    #result {
+      font-size: 24px;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+  </style>
 </head>
 <body>
-<!-- partial:index.partial.html -->
 
-<!-- QR SCANNER CODE BELOW  -->
-<div class="row">
-  <div class="col">
-    <div id="reader"></div>
-  </div>
-  <div class="col" style="padding: 30px">
-    <div id="result">
-      
-    </div>
-  </div>
-
+<div class="container">
+  <div id="reader"></div>
+  <div id="result"></div>
 </div>
-<!-- partial -->
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.2.0/html5-qrcode.min.js'></script><script  src="./script.js"></script>
+
+<script src='https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.2.0/html5-qrcode.min.js'></script>
+<script src="./script.js"></script>
 
 </body>
 </html>
