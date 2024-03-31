@@ -27,25 +27,11 @@
     }
 
     #result {
-      display: none; /* Hide the scan result text */
-    }
-
-    .btn {
-      background-color: #4CAF50; /* Green */
-      border: none;
-      color: white;
-      padding: 15px 32px;
-      text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      font-size: 16px;
-      margin: 4px 2px;
-      cursor: pointer;
-      border-radius: 8px;
-    }
-
-    .btn:hover {
-      background-color: #45a049; /* Darker green on hover */
+      font-size: 24px;
+      padding: 20px;
+      background-color: #444; /* Slightly lighter gray */
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); /* White shadow for contrast */
     }
   </style>
 </head>
@@ -55,7 +41,6 @@
   <h1>QR Code Reader</h1>
   <div id="reader"></div>
   <div id="result">Scan result will appear here</div>
-  <button class="btn">Scan QR Code</button>
 </div>
 
 <script src='https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.2.0/html5-qrcode.min.js'></script>
