@@ -1,0 +1,98 @@
+{
+  "frames": [
+    {
+      "type": "title",
+      "content": "Business Cards Responsive - GB Lesson",
+      "x": 0,
+      "y": 0,
+      "w": 0,
+      "h": 0
+    },
+    {
+      "type": "textBall",
+      "content": "1st Lecture: The Situation in Great Britain Before and After the Industrial Revolution",
+      "x": 50,
+      "y": 50,
+      "w": 1000,
+      "h": 100
+    },
+    {
+      "type": "infoBall",
+      "text": "The Industrial Revolution (1760s–1840s) transformed Great Britain from an agricultural society into a modern industrial economy.",
+      "x": 50,
+      "y": 120,
+      "w": 1000,
+      "h": 100
+    },
+    {
+      "type": "infoBall",
+      "text": "Before the revolution, most people worked in small towns, relying on handicrafts and manual labor powered by people, animals, and waterwheels.",
+      "x": 50,
+      "y": 230,
+      "w": 1000,
+      "h": 100
+    },
+    {
+      "type": "question",
+      "questions": [
+        {
+          "text": "What powered production before the Industrial Revolution?",
+          "correctAnswer": {
+            "text": "People, animals, and waterwheels",
+            "x": 150,
+            "y": 350,
+            "w": 200,
+            "h": 50
+          },
+          "falseAnswers": [
+            { "text": "Electricity", "x": 150, "y": 420, "w": 200, "h": 50 },
+            { "text": "Gasoline", "x": 150, "y": 490, "w": 200, "h": 50 }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "infoBall",
+      "text": "Technological advances, especially in the textile industry, were key factors in the revolution.",
+      "x": 50,
+      "y": 560,
+      "w": 1000,
+      "h": 100
+    },
+    {
+      "type": "question",
+      "questions": [
+        {
+          "text": "Which invention was crucial for the Industrial Revolution?",
+          "correctAnswer": {
+            "text": "James Watt’s steam engine",
+            "x": 150,
+            "y": 670,
+            "w": 200,
+            "h": 50
+          },
+          "falseAnswers": [
+            { "text": "John Kay’s Flying Shuttle", "x": 150, "y": 740, "w": 200, "h": 50 },
+            { "text": "Telegraph", "x": 150, "y": 810, "w": 200, "h": 50 }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "infoBall",
+      "text": "The Victorian Era began in 1837, marking the end of the first Industrial Revolution in Britain.",
+      "x": 50,
+      "y": 880,
+      "w": 300,
+      "h": 100
+    },
+    {
+      "type": "title",
+      "content": "End of Lesson 1",
+      "x": 0,
+      "y": 1000,
+      "w": 0,
+      "h": 0
+    }
+  ]
+}

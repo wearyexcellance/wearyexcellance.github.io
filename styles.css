@@ -1,0 +1,187 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #ff3300, #FFA500);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    justify-content: space-between;
+    color: #fff;
+}
+
+header#title {
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 15px;
+    text-align: center;
+}
+
+header#title h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+/* App Container */
+#app {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* Frames */
+.frame {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    height: 80vh; /* Make frame occupy most of the screen */
+    position: relative;
+    box-sizing: border-box;
+}
+
+/* Text Ball */
+.text-ball {
+    background-color: lightblue;
+    border-radius: 10px; /* Changed from 50% to make it a smooth rectangle */
+    padding: 20px;
+    margin-bottom: 20px;
+    width: 100px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+}
+
+/* Answer Buttons */
+.answer-btn {
+    display: block;
+    margin: 10px auto;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 80%;
+    max-width: 300px;
+}
+
+.answer-btn:hover {
+    background-color: #ddd;
+}
+
+/* Uniform Button Color */
+.answer-btn.correct,
+.answer-btn.false {
+    background-color: #007BFF; /* Same color for both */
+    color: white;
+}
+
+.answer-btn.correct:hover,
+.answer-btn.false:hover {
+    background-color: #0056b3;
+}
+
+/* Navigation Buttons */
+.nav-btn, .lesson-btn, .nav-link {
+    background-color: #333;
+    color: white;
+    padding: 15px 30px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin: 10px;
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.nav-btn:hover, .lesson-btn:hover, .nav-link:hover {
+    background-color: #555;
+}
+
+/* Navigation Container */
+#navigation {
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+/* Lessons Container */
+#lessons-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.lesson-btn {
+    width: 80%;
+    max-width: 300px;
+    margin: 10px 0;
+    font-size: 1.2rem;
+}
+
+/* Info Ball */
+.info-ball {
+    background-color: #f0f0f0; /* Light background color */
+    border-radius: 10px; /* Rounded corners */
+    padding: 20px; /* Padding for better appearance */
+    position: absolute; /* Positioned absolutely within the frame */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    left: 50%; /* Center horizontally */
+    top: 50%; /* Center vertically */
+    transform: translate(-50%, -50%); /* Center the ball */
+    width: 80%; /* Responsive width */
+    max-width: 400px; /* Limit the maximum width */
+    text-align: center; /* Center text inside the ball */
+    font-size: 2.5rem; /* Increased font size for better visibility */
+    color: darkgray; /* Dark gray font color */
+}
+
+/* Image in Frame */
+.frame-image {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 10px;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .answer-btn {
+        width: 90%;
+        font-size: 1.2rem;
+    }
+
+    .text-ball {
+        width: 80px;
+        height: 80px;
+    }
+
+    .nav-btn, .lesson-btn, .nav-link {
+        width: 45%;
+        font-size: 1rem;
+        padding: 10px 20px;
+    }
+
+    header#title h1 {
+        font-size: 1.2rem;
+    }
+}
+
+.question-text {
+    color: orange; /* Set text color to orange */
+    font-size: 2rem; /* Set a larger font size */
+    font-weight: bold; /* Make the font bold */
+    margin: 20px 0; /* Add some margin for spacing */
+    text-align: center; /* Center the text */
+}
+
