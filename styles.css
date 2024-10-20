@@ -5,8 +5,8 @@ body {
     margin: 0;
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    justify-content: space-between;
+    height: 100vh; /* Full viewport height */
+    overflow: hidden; /* Prevent scrolling */
     color: #fff;
 }
 
@@ -28,6 +28,8 @@ header#title h1 {
     justify-content: center;
     align-items: center;
     padding: 20px;
+    height: 100%; /* Full height for the app container */
+    box-sizing: border-box;
 }
 
 /* Frames */
@@ -37,7 +39,8 @@ header#title h1 {
     padding: 20px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
     width: 100%;
-    height: 80vh; /* Make frame occupy most of the screen */
+    height: calc(100% - 60px); /* Take up most of the screen height, accounting for padding */
+    max-width: 1200px; /* Optional max-width to limit frame size */
     position: relative;
     box-sizing: border-box;
 }
@@ -111,6 +114,8 @@ header#title h1 {
     justify-content: center;
     padding: 20px;
     background-color: rgba(0, 0, 0, 0.3);
+    width: 100%; /* Ensure the navigation stretches across the full width */
+    box-sizing: border-box;
 }
 
 /* Lessons Container */
@@ -138,12 +143,12 @@ header#title h1 {
     position: absolute; /* Positioned absolutely within the frame */
     box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
     left: 50%; /* Center horizontally */
-    top: 50%; /* Center vertically */
-    transform: translate(-50%, -50%); /* Center the ball */
+    top: 10%; /* Place it towards the top of the frame */
+    transform: translateX(-50%); /* Center horizontally */
     width: 80%; /* Responsive width */
     max-width: 400px; /* Limit the maximum width */
     text-align: center; /* Center text inside the ball */
-    font-size: 2.5rem; /* Increased font size for better visibility */
+    font-size: 1.5rem; /* Slightly smaller font size for better readability */
     color: darkgray; /* Dark gray font color */
 }
 
@@ -177,6 +182,7 @@ header#title h1 {
     }
 }
 
+/* Question Text */
 .question-text {
     color: orange; /* Set text color to orange */
     font-size: 2rem; /* Set a larger font size */
@@ -185,3 +191,20 @@ header#title h1 {
     text-align: center; /* Center the text */
 }
 
+/* Custom Title Styling (adapt font and stretch width) */
+.custom-title {
+    font-size: 3rem; /* Very large font */
+    text-align: center;
+    color: white; /* Custom title white color */
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 10px;
+    width: 100%; /* Stretched across the width */
+    box-sizing: border-box;
+}
+
+/* Info Ball Text */
+.info-ball-text {
+    font-size: 1rem; /* Smaller font for the info-ball */
+    text-align: center;
+    color: darkgray;
+}
