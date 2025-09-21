@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Viewer in React</title>
+    <script src="index_files/react.development.js"></script>
+    <script src="index_files/react-dom.development.js"></script>
+    <script src="index_files/babel.min.js"></script>
+    <script src="index_files/pdf.min.js"></script>
+    <script src="index_files/pdf.worker.min.js"></script>
+    <link rel="stylesheet" href="index_files/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        #root {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            width: 90%;
+            max-width: 1000px;
+            overflow: hidden;
+            margin: 20px;
+        }
+        
+        header {
+            background: #4a6de5;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .upload-section {
+            background: #f8f9fa;
+            border: 2px dashed #c0c6dd;
+            border-radius: 10px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-section:hover {
+            border-color: #4a6de5;
+            background: #f0f4ff;
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: #4a6de5;
+            margin-bottom: 15px;
+        }
+        
+        .upload-text {
+            margin-bottom: 20px;
+            color: #555;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .btn {
+            background: #4a6de5;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover {
+            background: #3a5bd0;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(58, 91, 208, 0.3);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+        }
+        
+        .pdf-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .page-info {
+            font-weight: 600;
+            color: #4a6de5;
+        }
+        
+        .pdf-viewer {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f0f0f0;
+            min-height: 500px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        .pdf-canvas {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin: 20px 0;
+            max-width: 100%;
+        }
+        
+        .loading {
+            font-size: 1.2rem;
+            color: #4a6de5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(74, 109, 229, 0.2);
+            border-radius: 50%;
+            border-top-color: #4a6de5;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .error {
+            color: #e74c3c;
+            text-align: center;
+            padding: 20px;
+            background: #ffeded;
+            border-radius: 10px;
+            border: 1px solid #ffcbcb;
+        }
+        
+        .sample-btns {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+            font-size: 0.9rem;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+            
+            .pdf-controls {
+                flex-direction: column;
+            }
+            
+            .sample-btns {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+<script>"use strict";
+
+function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
+function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
+function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
+function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
+function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
+function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
+// PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js';
+var _React = React,
+  useState = _React.useState,
+  useRef = _React.useRef;
+var PDFViewer = function PDFViewer() {
+  var _useState = useState(null),
+    _useState2 = _slicedToArray(_useState, 2),
+    pdfDoc = _useState2[0],
+    setPdfDoc = _useState2[1];
+  var _useState3 = useState(1),
+    _useState4 = _slicedToArray(_useState3, 2),
+    currentPage = _useState4[0],
+    setCurrentPage = _useState4[1];
+  var _useState5 = useState(false),
+    _useState6 = _slicedToArray(_useState5, 2),
+    loading = _useState6[0],
+    setLoading = _useState6[1];
+  var _useState7 = useState(null),
+    _useState8 = _slicedToArray(_useState7, 2),
+    error = _useState8[0],
+    setError = _useState8[1];
+  var canvasRef = useRef(null);
+
+  // Load a PDF document
+  var loadPDF = /*#__PURE__*/function () {
+    var _ref = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee(pdfSource) {
+      var loadingTask, pdf, _t;
+      return _regenerator().w(function (_context) {
+        while (1) switch (_context.p = _context.n) {
+          case 0:
+            _context.p = 0;
+            setLoading(true);
+            setError(null);
+
+            // Clear previous PDF
+            setPdfDoc(null);
+            loadingTask = pdfjsLib.getDocument(pdfSource);
+            _context.n = 1;
+            return loadingTask.promise;
+          case 1:
+            pdf = _context.v;
+            setPdfDoc(pdf);
+            setCurrentPage(1);
+            renderPage(pdf, 1);
+            _context.n = 3;
+            break;
+          case 2:
+            _context.p = 2;
+            _t = _context.v;
+            console.error('Error loading PDF:', _t);
+            setError('Failed to load PDF. Please try another file.');
+          case 3:
+            _context.p = 3;
+            setLoading(false);
+            return _context.f(3);
+          case 4:
+            return _context.a(2);
+        }
+      }, _callee, null, [[0, 2, 3, 4]]);
+    }));
+    return function loadPDF(_x) {
+      return _ref.apply(this, arguments);
+    };
+  }();
+
+  // Render a specific page
+  var renderPage = /*#__PURE__*/function () {
+    var _ref2 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2(pdf, pageNumber) {
+      var page, canvas, ctx, viewport, renderContext, _t2;
+      return _regenerator().w(function (_context2) {
+        while (1) switch (_context2.p = _context2.n) {
+          case 0:
+            _context2.p = 0;
+            _context2.n = 1;
+            return pdf.getPage(pageNumber);
+          case 1:
+            page = _context2.v;
+            canvas = canvasRef.current;
+            ctx = canvas.getContext('2d');
+            viewport = page.getViewport({
+              scale: 1.5
+            });
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            renderContext = {
+              canvasContext: ctx,
+              viewport: viewport
+            };
+            _context2.n = 2;
+            return page.render(renderContext).promise;
+          case 2:
+            _context2.n = 4;
+            break;
+          case 3:
+            _context2.p = 3;
+            _t2 = _context2.v;
+            console.error('Error rendering page:', _t2);
+            setError('Failed to render PDF page.');
+          case 4:
+            return _context2.a(2);
+        }
+      }, _callee2, null, [[0, 3]]);
+    }));
+    return function renderPage(_x2, _x3) {
+      return _ref2.apply(this, arguments);
+    };
+  }();
+
+  // Handle file upload
+  var handleFileUpload = function handleFileUpload(event) {
+    var file = event.target.files[0];
+    if (file && file.type === 'application/pdf') {
+      var fileURL = URL.createObjectURL(file);
+      loadPDF(fileURL);
+    } else {
+      setError('Please select a valid PDF file.');
+    }
+  };
+
+  // Navigate to previous page
+  var goToPrevPage = function goToPrevPage() {
+    if (currentPage > 1) {
+      var newPage = currentPage - 1;
+      setCurrentPage(newPage);
+      renderPage(pdfDoc, newPage);
+    }
+  };
+
+  // Navigate to next page
+  var goToNextPage = function goToNextPage() {
+    if (currentPage < pdfDoc.numPages) {
+      var newPage = currentPage + 1;
+      setCurrentPage(newPage);
+      renderPage(pdfDoc, newPage);
+    }
+  };
+
+  // Load sample PDF
+  var loadSamplePDF = function loadSamplePDF() {
+    // Using a sample PDF document for demonstration
+    loadPDF('loadPDF');
+  };
+  return /*#__PURE__*/React.createElement("div", {
+    className: "container"
+  }, /*#__PURE__*/React.createElement("header", null, /*#__PURE__*/React.createElement("h1", null, "React PDF Viewer"), /*#__PURE__*/React.createElement("p", {
+    className: "subtitle"
+  }, "Load and view PDF files in your React application")), /*#__PURE__*/React.createElement("div", {
+    className: "content"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "upload-section"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-file-pdf upload-icon"
+  }), /*#__PURE__*/React.createElement("p", {
+    className: "upload-text"
+  }, "Upload a PDF file or try a sample"), /*#__PURE__*/React.createElement("input", {
+    type: "file",
+    accept: "application/pdf",
+    onChange: handleFileUpload,
+    className: "file-input",
+    id: "pdf-upload"
+  }), /*#__PURE__*/React.createElement("label", {
+    htmlFor: "pdf-upload",
+    className: "btn"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-upload"
+  }), " Choose PDF File"), /*#__PURE__*/React.createElement("div", {
+    className: "sample-btns"
+  }, /*#__PURE__*/React.createElement("p", {
+    style: {
+      width: '100%',
+      marginTop: '15px',
+      marginBottom: '10px'
+    }
+  }, "Or try a sample PDF:"), /*#__PURE__*/React.createElement("button", {
+    className: "btn btn-secondary",
+    onClick: loadSamplePDF
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-eye"
+  }), " View Sample PDF"))), error && /*#__PURE__*/React.createElement("div", {
+    className: "error"
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-exclamation-circle"
+  }), " ", error), pdfDoc && /*#__PURE__*/React.createElement("div", {
+    className: "pdf-controls"
+  }, /*#__PURE__*/React.createElement("button", {
+    className: "btn",
+    onClick: goToPrevPage,
+    disabled: currentPage <= 1
+  }, /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-chevron-left"
+  }), " Previous"), /*#__PURE__*/React.createElement("span", {
+    className: "page-info"
+  }, "Page ", currentPage, " of ", pdfDoc.numPages), /*#__PURE__*/React.createElement("button", {
+    className: "btn",
+    onClick: goToNextPage,
+    disabled: currentPage >= pdfDoc.numPages
+  }, "Next ", /*#__PURE__*/React.createElement("i", {
+    className: "fas fa-chevron-right"
+  }))), /*#__PURE__*/React.createElement("div", {
+    className: "pdf-viewer"
+  }, loading ? /*#__PURE__*/React.createElement("div", {
+    className: "loading"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "spinner"
+  }), /*#__PURE__*/React.createElement("p", null, "Loading PDF...")) : /*#__PURE__*/React.createElement("canvas", {
+    ref: canvasRef,
+    className: "pdf-canvas"
+  }))), /*#__PURE__*/React.createElement("footer", null, /*#__PURE__*/React.createElement("p", null, "Built with React.js and PDF.js \u2022 Supports PDF viewing with navigation")));
+};
+
+// Render the app
+ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(PDFViewer, null));
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJuYW1lcyI6WyJlIiwidCIsInIiLCJTeW1ib2wiLCJuIiwiaXRlcmF0b3IiLCJvIiwidG9TdHJpbmdUYWciLCJpIiwiYyIsInByb3RvdHlwZSIsIkdlbmVyYXRvciIsInUiLCJPYmplY3QiLCJjcmVhdGUiLCJfcmVnZW5lcmF0b3JEZWZpbmUyIiwiZiIsInAiLCJ5IiwiRyIsInYiLCJhIiwiZCIsImJpbmQiLCJsZW5ndGgiLCJsIiwiVHlwZUVycm9yIiwiY2FsbCIsImRvbmUiLCJ2YWx1ZSIsIkdlbmVyYXRvckZ1bmN0aW9uIiwiR2VuZXJhdG9yRnVuY3Rpb25Qcm90b3R5cGUiLCJnZXRQcm90b3R5cGVPZiIsInNldFByb3RvdHlwZU9mIiwiX19wcm90b19fIiwiZGlzcGxheU5hbWUiLCJfcmVnZW5lcmF0b3IiLCJ3IiwibSIsImRlZmluZVByb3BlcnR5IiwiX3JlZ2VuZXJhdG9yRGVmaW5lIiwiX2ludm9rZSIsImVudW1lcmFibGUiLCJjb25maWd1cmFibGUiLCJ3cml0YWJsZSIsImFzeW5jR2VuZXJhdG9yU3RlcCIsIlByb21pc2UiLCJyZXNvbHZlIiwidGhlbiIsIl9hc3luY1RvR2VuZXJhdG9yIiwiYXJndW1lbnRzIiwiYXBwbHkiLCJfbmV4dCIsIl90aHJvdyIsIl9zbGljZWRUb0FycmF5IiwiX2FycmF5V2l0aEhvbGVzIiwiX2l0ZXJhYmxlVG9BcnJheUxpbWl0IiwiX3Vuc3VwcG9ydGVkSXRlcmFibGVUb0FycmF5IiwiX25vbkl0ZXJhYmxlUmVzdCIsIl9hcnJheUxpa2VUb0FycmF5IiwidG9TdHJpbmciLCJzbGljZSIsImNvbnN0cnVjdG9yIiwibmFtZSIsIkFycmF5IiwiZnJvbSIsInRlc3QiLCJuZXh0IiwicHVzaCIsImlzQXJyYXkiLCJwZGZqc0xpYiIsIkdsb2JhbFdvcmtlck9wdGlvbnMiLCJ3b3JrZXJTcmMiLCJfUmVhY3QiLCJSZWFjdCIsInVzZVN0YXRlIiwidXNlUmVmIiwiUERGVmlld2VyIiwiX3VzZVN0YXRlIiwiX3VzZVN0YXRlMiIsInBkZkRvYyIsInNldFBkZkRvYyIsIl91c2VTdGF0ZTMiLCJfdXNlU3RhdGU0IiwiY3VycmVudFBhZ2UiLCJzZXRDdXJyZW50UGFnZSIsIl91c2VTdGF0ZTUiLCJfdXNlU3RhdGU2IiwibG9hZGluZyIsInNldExvYWRpbmciLCJfdXNlU3RhdGU3IiwiX3VzZVN0YXRlOCIsImVycm9yIiwic2V0RXJyb3IiLCJjYW52YXNSZWYiLCJsb2FkUERGIiwiX3JlZiIsIl9jYWxsZWUiLCJwZGZTb3VyY2UiLCJsb2FkaW5nVGFzayIsInBkZiIsIl90IiwiX2NvbnRleHQiLCJnZXREb2N1bWVudCIsInByb21pc2UiLCJyZW5kZXJQYWdlIiwiY29uc29sZSIsIl94IiwiX3JlZjIiLCJfY2FsbGVlMiIsInBhZ2VOdW1iZXIiLCJwYWdlIiwiY2FudmFzIiwiY3R4Iiwidmlld3BvcnQiLCJyZW5kZXJDb250ZXh0IiwiX3QyIiwiX2NvbnRleHQyIiwiZ2V0UGFnZSIsImN1cnJlbnQiLCJnZXRDb250ZXh0IiwiZ2V0Vmlld3BvcnQiLCJzY2FsZSIsImhlaWdodCIsIndpZHRoIiwiY2FudmFzQ29udGV4dCIsInJlbmRlciIsIl94MiIsIl94MyIsImhhbmRsZUZpbGVVcGxvYWQiLCJldmVudCIsImZpbGUiLCJ0YXJnZXQiLCJmaWxlcyIsInR5cGUiLCJmaWxlVVJMIiwiVVJMIiwiY3JlYXRlT2JqZWN0VVJMIiwiZ29Ub1ByZXZQYWdlIiwibmV3UGFnZSIsImdvVG9OZXh0UGFnZSIsIm51bVBhZ2VzIiwibG9hZFNhbXBsZVBERiIsImNyZWF0ZUVsZW1lbnQiLCJjbGFzc05hbWUiLCJhY2NlcHQiLCJvbkNoYW5nZSIsImlkIiwiaHRtbEZvciIsInN0eWxlIiwibWFyZ2luVG9wIiwibWFyZ2luQm90dG9tIiwib25DbGljayIsImRpc2FibGVkIiwicmVmIiwiUmVhY3RET00iLCJjcmVhdGVSb290IiwiZG9jdW1lbnQiLCJnZXRFbGVtZW50QnlJZCJdLCJzb3VyY2VzIjpbIklubGluZSBCYWJlbCBzY3JpcHQiXSwic291cmNlc0NvbnRlbnQiOlsiXG4gICAgICAgIC8vIFBERi5qcyB3b3JrZXJcbiAgICAgICAgcGRmanNMaWIuR2xvYmFsV29ya2VyT3B0aW9ucy53b3JrZXJTcmMgPSAnaHR0cHM6Ly91bnBrZy5jb20vcGRmanMtZGlzdEAzLjQuMTIwL2J1aWxkL3BkZi53b3JrZXIubWluLmpzJztcblxuICAgICAgICBjb25zdCB7IHVzZVN0YXRlLCB1c2VSZWYgfSA9IFJlYWN0O1xuXG4gICAgICAgIGNvbnN0IFBERlZpZXdlciA9ICgpID0+IHtcbiAgICAgICAgICAgIGNvbnN0IFtwZGZEb2MsIHNldFBkZkRvY10gPSB1c2VTdGF0ZShudWxsKTtcbiAgICAgICAgICAgIGNvbnN0IFtjdXJyZW50UGFnZSwgc2V0Q3VycmVudFBhZ2VdID0gdXNlU3RhdGUoMSk7XG4gICAgICAgICAgICBjb25zdCBbbG9hZGluZywgc2V0TG9hZGluZ10gPSB1c2VTdGF0ZShmYWxzZSk7XG4gICAgICAgICAgICBjb25zdCBbZXJyb3IsIHNldEVycm9yXSA9IHVzZVN0YXRlKG51bGwpO1xuICAgICAgICAgICAgY29uc3QgY2FudmFzUmVmID0gdXNlUmVmKG51bGwpO1xuXG4gICAgICAgICAgICAvLyBMb2FkIGEgUERGIGRvY3VtZW50XG4gICAgICAgICAgICBjb25zdCBsb2FkUERGID0gYXN5bmMgKHBkZlNvdXJjZSkgPT4ge1xuICAgICAgICAgICAgICAgIHRyeSB7XG4gICAgICAgICAgICAgICAgICAgIHNldExvYWRpbmcodHJ1ZSk7XG4gICAgICAgICAgICAgICAgICAgIHNldEVycm9yKG51bGwpO1xuICAgICAgICAgICAgICAgICAgICBcbiAgICAgICAgICAgICAgICAgICAgLy8gQ2xlYXIgcHJldmlvdXMgUERGXG4gICAgICAgICAgICAgICAgICAgIHNldFBkZkRvYyhudWxsKTtcbiAgICAgICAgICAgICAgICAgICAgXG4gICAgICAgICAgICAgICAgICAgIGNvbnN0IGxvYWRpbmdUYXNrID0gcGRmanNMaWIuZ2V0RG9jdW1lbnQocGRmU291cmNlKTtcbiAgICAgICAgICAgICAgICAgICAgY29uc3QgcGRmID0gYXdhaXQgbG9hZGluZ1Rhc2sucHJvbWlzZTtcbiAgICAgICAgICAgICAgICAgICAgXG4gICAgICAgICAgICAgICAgICAgIHNldFBkZkRvYyhwZGYpO1xuICAgICAgICAgICAgICAgICAgICBzZXRDdXJyZW50UGFnZSgxKTtcbiAgICAgICAgICAgICAgICAgICAgcmVuZGVyUGFnZShwZGYsIDEpO1xuICAgICAgICAgICAgICAgIH0gY2F0Y2ggKGVycikge1xuICAgICAgICAgICAgICAgICAgICBjb25zb2xlLmVycm9yKCdFcnJvciBsb2FkaW5nIFBERjonLCBlcnIpO1xuICAgICAgICAgICAgICAgICAgICBzZXRFcnJvcignRmFpbGVkIHRvIGxvYWQgUERGLiBQbGVhc2UgdHJ5IGFub3RoZXIgZmlsZS4nKTtcbiAgICAgICAgICAgICAgICB9IGZpbmFsbHkge1xuICAgICAgICAgICAgICAgICAgICBzZXRMb2FkaW5nKGZhbHNlKTtcbiAgICAgICAgICAgICAgICB9XG4gICAgICAgICAgICB9O1xuXG4gICAgICAgICAgICAvLyBSZW5kZXIgYSBzcGVjaWZpYyBwYWdlXG4gICAgICAgICAgICBjb25zdCByZW5kZXJQYWdlID0gYXN5bmMgKHBkZiwgcGFnZU51bWJlcikgPT4ge1xuICAgICAgICAgICAgICAgIHRyeSB7XG4gICAgICAgICAgICAgICAgICAgIGNvbnN0IHBhZ2UgPSBhd2FpdCBwZGYuZ2V0UGFnZShwYWdlTnVtYmVyKTtcbiAgICAgICAgICAgICAgICAgICAgY29uc3QgY2FudmFzID0gY2FudmFzUmVmLmN1cnJlbnQ7XG4gICAgICAgICAgICAgICAgICAgIGNvbnN0IGN0eCA9IGNhbnZhcy5nZXRDb250ZXh0KCcyZCcpO1xuICAgICAgICAgICAgICAgICAgICBcbiAgICAgICAgICAgICAgICAgICAgY29uc3Qgdmlld3BvcnQgPSBwYWdlLmdldFZpZXdwb3J0KHsgc2NhbGU6IDEuNSB9KTtcbiAgICAgICAgICAgICAgICAgICAgY2FudmFzLmhlaWdodCA9IHZpZXdwb3J0LmhlaWdodDtcbiAgICAgICAgICAgICAgICAgICAgY2FudmFzLndpZHRoID0gdmlld3BvcnQud2lkdGg7XG4gICAgICAgICAgICAgICAgICAgIFxuICAgICAgICAgICAgICAgICAgICBjb25zdCByZW5kZXJDb250ZXh0ID0ge1xuICAgICAgICAgICAgICAgICAgICAgICAgY2FudmFzQ29udGV4dDogY3R4LFxuICAgICAgICAgICAgICAgICAgICAgICAgdmlld3BvcnQ6IHZpZXdwb3J0XG4gICAgICAgICAgICAgICAgICAgIH07XG4gICAgICAgICAgICAgICAgICAgIFxuICAgICAgICAgICAgICAgICAgICBhd2FpdCBwYWdlLnJlbmRlcihyZW5kZXJDb250ZXh0KS5wcm9taXNlO1xuICAgICAgICAgICAgICAgIH0gY2F0Y2ggKGVycikge1xuICAgICAgICAgICAgICAgICAgICBjb25zb2xlLmVycm9yKCdFcnJvciByZW5kZXJpbmcgcGFnZTonLCBlcnIpO1xuICAgICAgICAgICAgICAgICAgICBzZXRFcnJvcignRmFpbGVkIHRvIHJlbmRlciBQREYgcGFnZS4nKTtcbiAgICAgICAgICAgICAgICB9XG4gICAgICAgICAgICB9O1xuXG4gICAgICAgICAgICAvLyBIYW5kbGUgZmlsZSB1cGxvYWRcbiAgICAgICAgICAgIGNvbnN0IGhhbmRsZUZpbGVVcGxvYWQgPSAoZXZlbnQpID0+IHtcbiAgICAgICAgICAgICAgICBjb25zdCBmaWxlID0gZXZlbnQudGFyZ2V0LmZpbGVzWzBdO1xuICAgICAgICAgICAgICAgIGlmIChmaWxlICYmIGZpbGUudHlwZSA9PT0gJ2FwcGxpY2F0aW9uL3BkZicpIHtcbiAgICAgICAgICAgICAgICAgICAgY29uc3QgZmlsZVVSTCA9IFVSTC5jcmVhdGVPYmplY3RVUkwoZmlsZSk7XG4gICAgICAgICAgICAgICAgICAgIGxvYWRQREYoZmlsZVVSTCk7XG4gICAgICAgICAgICAgICAgfSBlbHNlIHtcbiAgICAgICAgICAgICAgICAgICAgc2V0RXJyb3IoJ1BsZWFzZSBzZWxlY3QgYSB2YWxpZCBQREYgZmlsZS4nKTtcbiAgICAgICAgICAgICAgICB9XG4gICAgICAgICAgICB9O1xuXG4gICAgICAgICAgICAvLyBOYXZpZ2F0ZSB0byBwcmV2aW91cyBwYWdlXG4gICAgICAgICAgICBjb25zdCBnb1RvUHJldlBhZ2UgPSAoKSA9PiB7XG4gICAgICAgICAgICAgICAgaWYgKGN1cnJlbnRQYWdlID4gMSkge1xuICAgICAgICAgICAgICAgICAgICBjb25zdCBuZXdQYWdlID0gY3VycmVudFBhZ2UgLSAxO1xuICAgICAgICAgICAgICAgICAgICBzZXRDdXJyZW50UGFnZShuZXdQYWdlKTtcbiAgICAgICAgICAgICAgICAgICAgcmVuZGVyUGFnZShwZGZEb2MsIG5ld1BhZ2UpO1xuICAgICAgICAgICAgICAgIH1cbiAgICAgICAgICAgIH07XG5cbiAgICAgICAgICAgIC8vIE5hdmlnYXRlIHRvIG5leHQgcGFnZVxuICAgICAgICAgICAgY29uc3QgZ29Ub05leHRQYWdlID0gKCkgPT4ge1xuICAgICAgICAgICAgICAgIGlmIChjdXJyZW50UGFnZSA8IHBkZkRvYy5udW1QYWdlcykge1xuICAgICAgICAgICAgICAgICAgICBjb25zdCBuZXdQYWdlID0gY3VycmVudFBhZ2UgKyAxO1xuICAgICAgICAgICAgICAgICAgICBzZXRDdXJyZW50UGFnZShuZXdQYWdlKTtcbiAgICAgICAgICAgICAgICAgICAgcmVuZGVyUGFnZShwZGZEb2MsIG5ld1BhZ2UpO1xuICAgICAgICAgICAgICAgIH1cbiAgICAgICAgICAgIH07XG5cbiAgICAgICAgICAgIC8vIExvYWQgc2FtcGxlIFBERlxuICAgICAgICAgICAgY29uc3QgbG9hZFNhbXBsZVBERiA9ICgpID0+IHtcbiAgICAgICAgICAgICAgICAvLyBVc2luZyBhIHNhbXBsZSBQREYgZG9jdW1lbnQgZm9yIGRlbW9uc3RyYXRpb25cbiAgICAgICAgICAgICAgICBsb2FkUERGKCdodHRwczovL3d3dy53My5vcmcvV0FJL0VSL3Rlc3RzL3hodG1sL3Rlc3RmaWxlcy9yZXNvdXJjZXMvcGRmL2R1bW15LnBkZicpO1xuICAgICAgICAgICAgfTtcblxuICAgICAgICAgICAgcmV0dXJuIChcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImNvbnRhaW5lclwiPlxuICAgICAgICAgICAgICAgICAgICA8aGVhZGVyPlxuICAgICAgICAgICAgICAgICAgICAgICAgPGgxPlJlYWN0IFBERiBWaWV3ZXI8L2gxPlxuICAgICAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwic3VidGl0bGVcIj5Mb2FkIGFuZCB2aWV3IFBERiBmaWxlcyBpbiB5b3VyIFJlYWN0IGFwcGxpY2F0aW9uPC9wPlxuICAgICAgICAgICAgICAgICAgICA8L2hlYWRlcj5cbiAgICAgICAgICAgICAgICAgICAgXG4gICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiY29udGVudFwiPlxuICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ1cGxvYWQtc2VjdGlvblwiPlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxpIGNsYXNzTmFtZT1cImZhcyBmYS1maWxlLXBkZiB1cGxvYWQtaWNvblwiPjwvaT5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ1cGxvYWQtdGV4dFwiPlVwbG9hZCBhIFBERiBmaWxlIG9yIHRyeSBhIHNhbXBsZTwvcD5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8aW5wdXRcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgdHlwZT1cImZpbGVcIlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBhY2NlcHQ9XCJhcHBsaWNhdGlvbi9wZGZcIlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBvbkNoYW5nZT17aGFuZGxlRmlsZVVwbG9hZH1cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiZmlsZS1pbnB1dFwiXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlkPVwicGRmLXVwbG9hZFwiXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgLz5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8bGFiZWwgaHRtbEZvcj1cInBkZi11cGxvYWRcIiBjbGFzc05hbWU9XCJidG5cIj5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPGkgY2xhc3NOYW1lPVwiZmFzIGZhLXVwbG9hZFwiPjwvaT4gQ2hvb3NlIFBERiBGaWxlXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9sYWJlbD5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNhbXBsZS1idG5zXCI+XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxwIHN0eWxlPXt7d2lkdGg6ICcxMDAlJywgbWFyZ2luVG9wOiAnMTVweCcsIG1hcmdpbkJvdHRvbTogJzEwcHgnfX0+T3IgdHJ5IGEgc2FtcGxlIFBERjo8L3A+XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxidXR0b24gY2xhc3NOYW1lPVwiYnRuIGJ0bi1zZWNvbmRhcnlcIiBvbkNsaWNrPXtsb2FkU2FtcGxlUERGfT5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxpIGNsYXNzTmFtZT1cImZhcyBmYS1leWVcIj48L2k+IFZpZXcgU2FtcGxlIFBERlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICAgICAgICAgICAgXG4gICAgICAgICAgICAgICAgICAgICAgICB7ZXJyb3IgJiYgKFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZXJyb3JcIj5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPGkgY2xhc3NOYW1lPVwiZmFzIGZhLWV4Y2xhbWF0aW9uLWNpcmNsZVwiPjwvaT4ge2Vycm9yfVxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICAgICAgICAgICAgKX1cbiAgICAgICAgICAgICAgICAgICAgICAgIFxuICAgICAgICAgICAgICAgICAgICAgICAge3BkZkRvYyAmJiAoXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJwZGYtY29udHJvbHNcIj5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPGJ1dHRvbiBjbGFzc05hbWU9XCJidG5cIiBvbkNsaWNrPXtnb1RvUHJldlBhZ2V9IGRpc2FibGVkPXtjdXJyZW50UGFnZSA8PSAxfT5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxpIGNsYXNzTmFtZT1cImZhcyBmYS1jaGV2cm9uLWxlZnRcIj48L2k+IFByZXZpb3VzXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJwYWdlLWluZm9cIj5QYWdlIHtjdXJyZW50UGFnZX0gb2Yge3BkZkRvYy5udW1QYWdlc308L3NwYW4+XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxidXR0b24gY2xhc3NOYW1lPVwiYnRuXCIgb25DbGljaz17Z29Ub05leHRQYWdlfSBkaXNhYmxlZD17Y3VycmVudFBhZ2UgPj0gcGRmRG9jLm51bVBhZ2VzfT5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIE5leHQgPGkgY2xhc3NOYW1lPVwiZmFzIGZhLWNoZXZyb24tcmlnaHRcIj48L2k+XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgICAgICAgICAgICAgKX1cbiAgICAgICAgICAgICAgICAgICAgICAgIFxuICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJwZGYtdmlld2VyXCI+XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAge2xvYWRpbmcgPyAoXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwibG9hZGluZ1wiPlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGlubmVyXCI+PC9kaXY+XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA8cD5Mb2FkaW5nIFBERi4uLjwvcD5cbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgKSA6IChcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgPGNhbnZhcyByZWY9e2NhbnZhc1JlZn0gY2xhc3NOYW1lPVwicGRmLWNhbnZhc1wiPjwvY2FudmFzPlxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICl9XG4gICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cbiAgICAgICAgICAgICAgICAgICAgPC9kaXY+XG4gICAgICAgICAgICAgICAgICAgIFxuICAgICAgICAgICAgICAgICAgICA8Zm9vdGVyPlxuICAgICAgICAgICAgICAgICAgICAgICAgPHA+QnVpbHQgd2l0aCBSZWFjdC5qcyBhbmQgUERGLmpzIOKAoiBTdXBwb3J0cyBQREYgdmlld2luZyB3aXRoIG5hdmlnYXRpb248L3A+XG4gICAgICAgICAgICAgICAgICAgIDwvZm9vdGVyPlxuICAgICAgICAgICAgICAgIDwvZGl2PlxuICAgICAgICAgICAgKTtcbiAgICAgICAgfTtcblxuICAgICAgICAvLyBSZW5kZXIgdGhlIGFwcFxuICAgICAgICBSZWFjdERPTS5jcmVhdGVSb290KGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdyb290JykpLnJlbmRlcig8UERGVmlld2VyIC8+KTtcbiAgICAiXSwibWFwcGluZ3MiOiI7OzBCQUNBLHVLQUFBQSxDQUFBLEVBQUFDLENBQUEsRUFBQUMsQ0FBQSx3QkFBQUMsTUFBQSxHQUFBQSxNQUFBLE9BQUFDLENBQUEsR0FBQUYsQ0FBQSxDQUFBRyxRQUFBLGtCQUFBQyxDQUFBLEdBQUFKLENBQUEsQ0FBQUssV0FBQSw4QkFBQUMsRUFBQU4sQ0FBQSxFQUFBRSxDQUFBLEVBQUFFLENBQUEsRUFBQUUsQ0FBQSxRQUFBQyxDQUFBLEdBQUFMLENBQUEsSUFBQUEsQ0FBQSxDQUFBTSxTQUFBLFlBQUFDLFNBQUEsR0FBQVAsQ0FBQSxHQUFBTyxTQUFBLEVBQUFDLENBQUEsR0FBQUMsTUFBQSxDQUFBQyxNQUFBLENBQUFMLENBQUEsQ0FBQUMsU0FBQSxVQUFBSyxtQkFBQSxDQUFBSCxDQUFBLHVCQUFBVixDQUFBLEVBQUFFLENBQUEsRUFBQUUsQ0FBQSxRQUFBRSxDQUFBLEVBQUFDLENBQUEsRUFBQUcsQ0FBQSxFQUFBSSxDQUFBLE1BQUFDLENBQUEsR0FBQVgsQ0FBQSxRQUFBWSxDQUFBLE9BQUFDLENBQUEsS0FBQUYsQ0FBQSxLQUFBYixDQUFBLEtBQUFnQixDQUFBLEVBQUFwQixDQUFBLEVBQUFxQixDQUFBLEVBQUFDLENBQUEsRUFBQU4sQ0FBQSxFQUFBTSxDQUFBLENBQUFDLElBQUEsQ0FBQXZCLENBQUEsTUFBQXNCLENBQUEsV0FBQUEsRUFBQXJCLENBQUEsRUFBQUMsQ0FBQSxXQUFBTSxDQUFBLEdBQUFQLENBQUEsRUFBQVEsQ0FBQSxNQUFBRyxDQUFBLEdBQUFaLENBQUEsRUFBQW1CLENBQUEsQ0FBQWYsQ0FBQSxHQUFBRixDQUFBLEVBQUFtQixDQUFBLGdCQUFBQyxFQUFBcEIsQ0FBQSxFQUFBRSxDQUFBLFNBQUFLLENBQUEsR0FBQVAsQ0FBQSxFQUFB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</script></head>
+<body>
+    <div id="root"><div class="container"><header><h1>React PDF Viewer</h1><p class="subtitle">Load and view PDF files in your React application</p></header><div class="content"><div class="upload-section"><i class="fas fa-file-pdf upload-icon"></i><p class="upload-text">Upload a PDF file or try a sample</p><input type="file" accept="application/pdf" class="file-input" id="pdf-upload"><label for="pdf-upload" class="btn"><i class="fas fa-upload"></i> Choose PDF File</label><div class="sample-btns"><p style="width: 100%; margin-top: 15px; margin-bottom: 10px;">Or try a sample PDF:</p><button class="btn btn-secondary"><i class="fas fa-eye"></i> View Sample PDF</button></div></div><div class="error"><i class="fas fa-exclamation-circle"></i> Failed to render PDF page.</div><div class="pdf-controls"><button class="btn" disabled="disabled"><i class="fas fa-chevron-left"></i> Previous</button><span class="page-info">Page 1 of 5</span><button class="btn">Next <i class="fas fa-chevron-right"></i></button></div><div class="pdf-viewer"><canvas class="pdf-canvas" height="1080" width="810"></canvas></div></div><footer><p>Built with React.js and PDF.js • Supports PDF viewing with navigation</p></footer></div></div>
+
+    <script type="text/babel">
+        // PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://unpkg.com/pdfjs-dist@3.4.120/build/pdf.worker.min.js';
+
+        const { useState, useRef } = React;
+
+        const PDFViewer = () => {
+            const [pdfDoc, setPdfDoc] = useState(null);
+            const [currentPage, setCurrentPage] = useState(1);
+            const [loading, setLoading] = useState(false);
+            const [error, setError] = useState(null);
+            const canvasRef = useRef(null);
+
+            // Load a PDF document
+            const loadPDF = async (pdfSource) => {
+                try {
+                    setLoading(true);
+                    setError(null);
+                    
+                    // Clear previous PDF
+                    setPdfDoc(null);
+                    
+                    const loadingTask = pdfjsLib.getDocument(pdfSource);
+                    const pdf = await loadingTask.promise;
+                    
+                    setPdfDoc(pdf);
+                    setCurrentPage(1);
+                    renderPage(pdf, 1);
+                } catch (err) {
+                    console.error('Error loading PDF:', err);
+                    setError('Failed to load PDF. Please try another file.');
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            // Render a specific page
+            const renderPage = async (pdf, pageNumber) => {
+                try {
+                    const page = await pdf.getPage(pageNumber);
+                    const canvas = canvasRef.current;
+                    const ctx = canvas.getContext('2d');
+                    
+                    const viewport = page.getViewport({ scale: 1.5 });
+                    canvas.height = viewport.height;
+                    canvas.width = viewport.width;
+                    
+                    const renderContext = {
+                        canvasContext: ctx,
+                        viewport: viewport
+                    };
+                    
+                    await page.render(renderContext).promise;
+                } catch (err) {
+                    console.error('Error rendering page:', err);
+                    setError('Failed to render PDF page.');
+                }
+            };
+
+            // Handle file upload
+            const handleFileUpload = (event) => {
+                const file = event.target.files[0];
+                if (file && file.type === 'application/pdf') {
+                    const fileURL = URL.createObjectURL(file);
+                    loadPDF(fileURL);
+                } else {
+                    setError('Please select a valid PDF file.');
+                }
+            };
+
+            // Navigate to previous page
+            const goToPrevPage = () => {
+                if (currentPage > 1) {
+                    const newPage = currentPage - 1;
+                    setCurrentPage(newPage);
+                    renderPage(pdfDoc, newPage);
+                }
+            };
+
+            // Navigate to next page
+            const goToNextPage = () => {
+                if (currentPage < pdfDoc.numPages) {
+                    const newPage = currentPage + 1;
+                    setCurrentPage(newPage);
+                    renderPage(pdfDoc, newPage);
+                }
+            };
+
+            // Load sample PDF
+            const loadSamplePDF = () => {
+                // Using a sample PDF document for demonstration
+                loadPDF('./test.pdf');
+            };
+
+            return (
+                <div className="container">
+                    <header>
+                        <h1>React PDF Viewer</h1>
+                        <p className="subtitle">Load and view PDF files in your React application</p>
+                    </header>
+                    
+                    <div className="content">
+                        <div className="upload-section">
+                            <i className="fas fa-file-pdf upload-icon"></i>
+                            <p className="upload-text">Upload a PDF file or try a sample</p>
+                            <input
+                                type="file"
+                                accept="application/pdf"
+                                onChange={handleFileUpload}
+                                className="file-input"
+                                id="pdf-upload"
+                            />
+                            <label htmlFor="pdf-upload" className="btn">
+                                <i className="fas fa-upload"></i> Choose PDF File
+                            </label>
+                            
+                            <div className="sample-btns">
+                                <p style={{width: '100%', marginTop: '15px', marginBottom: '10px'}}>Or try a sample PDF:</p>
+                                <button className="btn btn-secondary" onClick={loadSamplePDF}>
+                                    <i className="fas fa-eye"></i> View Sample PDF
+                                </button>
+                            </div>
+                        </div>
+                        
+                        {error && (
+                            <div className="error">
+                                <i className="fas fa-exclamation-circle"></i> {error}
+                            </div>
+                        )}
+                        
+                        {pdfDoc && (
+                            <div className="pdf-controls">
+                                <button className="btn" onClick={goToPrevPage} disabled={currentPage <= 1}>
+                                    <i className="fas fa-chevron-left"></i> Previous
+                                </button>
+                                <span className="page-info">Page {currentPage} of {pdfDoc.numPages}</span>
+                                <button className="btn" onClick={goToNextPage} disabled={currentPage >= pdfDoc.numPages}>
+                                    Next <i className="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        )}
+                        
+                        <div className="pdf-viewer">
+                            {loading ? (
+                                <div className="loading">
+                                    <div className="spinner"></div>
+                                    <p>Loading PDF...</p>
+                                </div>
+                            ) : (
+                                <canvas ref={canvasRef} className="pdf-canvas"></canvas>
+                            )}
+                        </div>
+                    </div>
+                    
+                    <footer>
+                        <p>Built with React.js and PDF.js • Supports PDF viewing with navigation</p>
+                    </footer>
+                </div>
+            );
+        };
+
+        // Render the app
+        ReactDOM.createRoot(document.getElementById('root')).render(<PDFViewer />);
+    </script>
+
+</body></html>
