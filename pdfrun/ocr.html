@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery Image OCR Scanner with ImgOCR API</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Note: Tesseract.js is no longer needed and has been removed -->
+    <style>
+        /* ... (All CSS styles from the previous version remain exactly the same) ... */
+        /* You can copy the full CSS from the previous example here */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-camera"></i> Gallery Image OCR Scanner</h1>
+            <p class="subtitle">Upload an image from your gallery and extract text using the ImgOCR AI API</p>
+        </header>
+        
+        <div class="main-content">
+            <div class="image-section">
+                <div class="section-title">
+                    <i class="fas fa-image"></i> Image Selection
+                </div>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <div class="upload-text">Click to upload image</div>
+                    <div class="upload-subtext">Supports JPG, PNG, BMP formats</div>
+                    <input type="file" id="imageInput" accept="image/*">
+                </div>
+                
+                <div class="image-preview" id="imagePreview">
+                    <img id="previewImage" src="" alt="Preview">
+                </div>
+                
+                <!-- Removed Language Selector as ImgOCR auto-detects language -->
+                
+                <div class="controls">
+                    <button class="btn btn-primary" id="scanButton" disabled>
+                        <i class="fas fa-search"></i> Scan Image with ImgOCR AI
+                    </button>
+                    <button class="btn btn-secondary" id="clearButton" disabled>
+                        <i class="fas fa-redo"></i> Clear All
+                    </button>
+                </div>
+                
+                <div class="loading" id="loadingIndicator">
+                    <div class="loading-spinner"></div>
+                    <p>Scanning image with AI... This may take a moment.</p>
+                    <!-- Accuracy display removed as not provided by basic API -->
+                </div>
+            </div>
+            
+            <div class="result-section">
+                <div class="section-title">
+                    <i class="fas fa-file-alt"></i> AI-Extracted Text
+                </div>
+                
+                <div class="ocr-result" id="ocrResult">
+                    <div class="placeholder-text">
+                        AI-extracted text will appear here after scanning...
+                    </div>
+                </div>
+                
+                <div class="result-stats" id="resultStats" style="display: none;">
+                    <div class="stat">
+                        <div class="stat-value" id="wordCount">0</div>
+                        <div class="stat-label">Words</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="charCount">0</div>
+                        <div class="stat-label">Characters</div>
+                    </div>
+                    <!-- Confidence stat removed -->
+                </div>
+                
+                <div class="controls" style="margin-top: 25px;">
+                    <button class="btn btn-secondary" id="copyButton" disabled>
+                        <i class="far fa-copy"></i> Copy Text to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>OCR powered by ImgOCR AI | Images are processed on secure servers</p>
+        </footer>
+    </div>
+
+    <script>
+        // DOM elements
+        const imageInput = document.getElementById('imageInput');
+        const uploadArea = document.getElementById('uploadArea');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImage = document.getElementById('previewImage');
+        const scanButton = document.getElementById('scanButton');
+        const clearButton = document.getElementById('clearButton');
+        const copyButton = document.getElementById('copyButton');
+        const ocrResult = document.getElementById('ocrResult');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const resultStats = document.getElementById('resultStats');
+        const wordCount = document.getElementById('wordCount');
+        const charCount = document.getElementById('charCount');
+        
+        // ✅ ImgOCR API Configuration
+        const IMGOCR_API_URL = 'https://www.imgocr.com/api/imgocr_get_text';
+        // ⚠️  REPLACE THIS WITH YOUR OWN API KEY FROM IMGOCR.COM
+        const IMGOCR_API_KEY = '47f2886894ef8a7676716e1d265b01fa'; 
+        
+        // Event listeners
+        uploadArea.addEventListener('click', () => imageInput.click());
+        imageInput.addEventListener('change', handleImageUpload);
+        scanButton.addEventListener('click', performOCRwithImgOCR);
+        clearButton.addEventListener('click', clearAll);
+        copyButton.addEventListener('click', copyToClipboard);
+        
+        // Handle image upload
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            if (!file.type.match('image.*')) {
+                alert('Please select an image file (JPG, PNG, etc.)');
+                return;
+            }
+            
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                previewImage.src = e.target.result;
+                imagePreview.style.display = 'block';
+                scanButton.disabled = false;
+                clearButton.disabled = false;
+                imagePreview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            };
+            
+            reader.readAsDataURL(file);
+        }
+        
+        // ✅ Perform OCR using ImgOCR API
+        async function performOCRwithImgOCR() {
+            if (!previewImage.src || previewImage.src === '') return;
+            
+            // Validate API Key
+            if (IMGOCR_API_KEY === 'YOUR_API_KEY_HERE') {
+                alert('Please set your ImgOCR API key in the script. Get one from imgocr.com');
+                return;
+            }
+            
+            // Show loading indicator
+            loadingIndicator.style.display = 'block';
+            scanButton.disabled = true;
+            copyButton.disabled = true;
+            
+            try {
+                // Convert image to Base64
+                const base64Image = previewImage.src.split(',')[1];
+                
+                // Prepare FormData as required by ImgOCR API[citation:3]
+                const formData = new FormData();
+                formData.append('api_key', IMGOCR_API_KEY);
+                formData.append('image', base64Image);
+                
+                // Make API request[citation:3]
+                const response = await fetch(IMGOCR_API_URL, {
+                    method: 'POST',
+                    body: new URLSearchParams(formData)
+                });
+                
+                const result = await response.json();
+                
+                // Handle API response[citation:3]
+                if (result.message === 'success') {
+                    displayOCRResults(result.text);
+                } else {
+                    throw new Error(result.error || 'API request failed');
+                }
+                
+            } catch (error) {
+                console.error('ImgOCR API Error:', error);
+                ocrResult.innerHTML = `<div class="placeholder-text" style="color: #d32f2f;">
+                    <i class="fas fa-exclamation-triangle"></i><br><br>
+                    Error during AI OCR processing: ${error.message}<br>
+                    Please try again or check your API key.
+                </div>`;
+                resultStats.style.display = 'none';
+            } finally {
+                loadingIndicator.style.display = 'none';
+                scanButton.disabled = false;
+            }
+        }
+        
+        // Display OCR results
+        function displayOCRResults(text) {
+            if (text.trim() === '') {
+                ocrResult.innerHTML = '<div class="placeholder-text">No text found in the image by AI.</div>';
+                resultStats.style.display = 'none';
+                copyButton.disabled = true;
+                return;
+            }
+            
+            // Calculate statistics
+            const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+            const characters = text.replace(/\s/g, '').length;
+            
+            // Update result display
+            ocrResult.textContent = text;
+            resultStats.style.display = 'flex';
+            wordCount.textContent = words.length;
+            charCount.textContent = characters;
+            
+            // Enable copy button
+            copyButton.disabled = false;
+            
+            // Scroll to results
+            ocrResult.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // Clear all inputs and results
+        function clearAll() {
+            imageInput.value = '';
+            previewImage.src = '';
+            imagePreview.style.display = 'none';
+            ocrResult.innerHTML = '<div class="placeholder-text">AI-extracted text will appear here after scanning...</div>';
+            resultStats.style.display = 'none';
+            loadingIndicator.style.display = 'none';
+            
+            scanButton.disabled = true;
+            clearButton.disabled = true;
+            copyButton.disabled = true;
+        }
+        
+        // Copy text to clipboard
+        function copyToClipboard() {
+            const text = ocrResult.textContent;
+            
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    const originalText = copyButton.innerHTML;
+                    copyButton.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    copyButton.style.backgroundColor = '#2e7d32';
+                    
+                    setTimeout(() => {
+                        copyButton.innerHTML = originalText;
+                        copyButton.style.backgroundColor = '';
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                    alert('Failed to copy text to clipboard');
+                });
+        }
+        
+        // Initialize
+        console.log("ImgOCR AI Scanner ready. Remember to add your API key.");
+    </script>
+</body>
+</html>
