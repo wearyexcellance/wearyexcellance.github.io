@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arm6 Mocap — Pruned MoveNet Viewer</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/4.22.0/tf.min.js"></script>
+
+<style>
+  :root {
+    --bg:        #0b0e0d;
+    --panel:     #111613;
+    --line:      #1f2a24;
+    --ink:       #d8e6dc;
+    --ink-dim:   #6f8579;
+    --accent:    #5eff9b;
+    --accent-dim:#2b6b47;
+    --warn:      #ff7a5e;
+    --mono: "IBM Plex Mono", "SF Mono", Consolas, monospace;
+    --sans: "Inter", system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 48px;
+  }
+
+  .rig {
+    width: 100%;
+    max-width: 880px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 14px;
+  }
+
+  h1 {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin: 0;
+    color: var(--ink);
+  }
+  h1 span { color: var(--accent); }
+
+  .meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-dim);
+    letter-spacing: 0.04em;
+  }
+
+  .stage {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  video, canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  video { transform: scaleX(-1); filter: brightness(0.85) saturate(0.9); }
+  canvas { transform: scaleX(-1); }
+
+  .hud {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    text-transform: uppercase;
+    pointer-events: none;
+    z-index: 5;
+    text-shadow: 0 0 8px rgba(0,0,0,0.6);
+  }
+  .hud .dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-right: 6px;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+  .overlay-msg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    background: rgba(11,14,13,0.92);
+    z-index: 10;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-dim);
+    letter-spacing: 0.04em;
+    text-align: center;
+    padding: 24px;
+  }
+  .overlay-msg.hidden { display: none; }
+  .overlay-msg b { color: var(--ink); font-weight: 600; }
+  .overlay-msg .err { color: var(--warn); }
+
+  button {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: var(--accent);
+    color: #07140c;
+    border: none;
+    padding: 9px 18px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  button:hover { filter: brightness(1.08); }
+  button:disabled { background: var(--line); color: var(--ink-dim); cursor: not-allowed; }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+
+  .controls input[type="text"] {
+    flex: 1;
+    min-width: 220px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 9px 10px;
+    border-radius: 3px;
+  }
+  .controls input[type="text"]::placeholder { color: var(--ink-dim); }
+
+  .readout {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .cell {
+    background: var(--panel);
+    padding: 10px 12px;
+  }
+  .cell .label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 4px;
+  }
+  .cell .value {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink);
+  }
+  .cell .value .score-good { color: var(--accent); }
+  .cell .value .score-bad  { color: var(--warn); }
+
+  footer {
+    margin-top: 18px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-dim);
+    line-height: 1.6;
+    letter-spacing: 0.02em;
+  }
+  footer a { color: var(--accent-dim); text-decoration: none; }
+
+  @media (max-width: 600px) {
+    .readout { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<div class="rig">
+  <header>
+    <h1>arm6<span>·</span>mocap</h1>
+    <div class="meta" id="modelMeta">model: not loaded</div>
+  </header>
+
+  <div class="stage" id="stage">
+    <video id="video" playsinline muted></video>
+    <canvas id="overlay"></canvas>
+    <div class="hud">
+      <span><span class="dot" id="liveDot" style="display:none;"></span><span id="hudStatus">idle</span></span>
+      <span id="hudFps">0 fps</span>
+    </div>
+    <div class="overlay-msg" id="overlayMsg">
+      <div>Load your pruned 6-keypoint MoveNet model to begin.</div>
+      <div style="font-size:10px;">Produced by <b>prune_movenet.py</b> — point this at the <b>model.json</b> from its <code>tfjs/</code> output folder.</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <input type="text" id="modelUrl" placeholder="model.json URL (e.g. http://localhost:8080/movenet6_lightning/tfjs/model.json)">
+    <button id="loadBtn">Load model</button>
+    <button id="startBtn" disabled>Start camera</button>
+    <button id="stopBtn" disabled>Stop</button>
+  </div>
+
+  <div class="readout" id="readout"></div>
+
+  <footer>
+    Pruned output: 6 channels — left_shoulder, right_shoulder, left_elbow, right_elbow, left_wrist, right_wrist.<br>
+    Each channel decodes as <code>[y, x, score]</code>, normalized 0–1, matching MoveNet's native convention.<br>
+    This page does inference-side decoding only — keypoint selection happened at export time in <code>prune_movenet.py</code>, not here.
+  </footer>
+</div>
+
+<script>
+// -----------------------------------------------------------------------
+// Arm6 Mocap Viewer
+// -----------------------------------------------------------------------
+// Loads a PRUNED MoveNet TF.js graph model (output shape [1,1,6,3]
+// instead of the stock [1,1,17,3]) produced by prune_movenet.py, runs
+// it on a live webcam feed, and draws the 6-point arm skeleton.
+//
+// This file does NOT filter 17 keypoints down to 6 -- the model file
+// itself only outputs 6. If you load the STOCK 17-keypoint MoveNet
+// here by mistake, this script will fail loudly (see validateOutputShape)
+// rather than silently slicing, since that would defeat the point of
+// the exercise.
+// -----------------------------------------------------------------------
+
+const ARM6_NAMES = [
+  "left_shoulder", "right_shoulder",
+  "left_elbow", "right_elbow",
+  "left_wrist", "right_wrist",
+];
+
+// Bones to draw between the 6 points (indices into ARM6_NAMES).
+const ARM6_EDGES = [
+  [0, 1], // left_shoulder -- right_shoulder
+  [0, 2], // left_shoulder -- left_elbow
+  [2, 4], // left_elbow    -- left_wrist
+  [1, 3], // right_shoulder-- right_elbow
+  [3, 5], // right_elbow   -- right_wrist
+];
+
+const SCORE_THRESHOLD = 0.25;
+
+let model = null;
+let modelInputSize = 192;
+let stream = null;
+let rafId = null;
+let lastFrameTime = performance.now();
+let fpsSmoothed = 0;
+
+const video = document.getElementById("video");
+const canvas = document.getElementById("overlay");
+const ctx = canvas.getContext("2d");
+const stage = document.getElementById("stage");
+const overlayMsg = document.getElementById("overlayMsg");
+const hudStatus = document.getElementById("hudStatus");
+const hudFps = document.getElementById("hudFps");
+const liveDot = document.getElementById("liveDot");
+const modelMeta = document.getElementById("modelMeta");
+const readout = document.getElementById("readout");
+
+const loadBtn = document.getElementById("loadBtn");
+const startBtn = document.getElementById("startBtn");
+const stopBtn = document.getElementById("stopBtn");
+const modelUrlInput = document.getElementById("modelUrl");
+
+// Build the 6 readout cells once.
+ARM6_NAMES.forEach((name) => {
+  const cell = document.createElement("div");
+  cell.className = "cell";
+  cell.innerHTML = `
+    <div class="label">${name.replace("_", " ")}</div>
+    <div class="value" id="cell-${name}">—</div>
+  `;
+  readout.appendChild(cell);
+});
+
+function setStatus(text) {
+  hudStatus.textContent = text;
+}
+
+function validateOutputShape(shape) {
+  // Expect [1, 1, 6, 3]. If someone points this at the STOCK 17-keypoint
+  // model, fail loudly instead of quietly coping -- the whole point of
+  // this tool is that the 6-keypoint constraint lives in the model file.
+  const ok = shape.length === 4 &&
+             shape[0] === 1 && shape[1] === 1 &&
+             shape[2] === 6 && shape[3] === 3;
+  return ok;
+}
+
+async function loadModel() {
+  const url = modelUrlInput.value.trim();
+  if (!url) {
+    alert("Enter the URL to your pruned model's model.json first.");
+    return;
+  }
+  setStatus("loading model…");
+  modelMeta.textContent = "model: loading…";
+  loadBtn.disabled = true;
+
+  try {
+    const loaded = await tf.loadGraphModel(url);
+
+    // Probe the model with a dummy input to confirm its real output shape.
+    // Try common input sizes; MoveNet Lightning=192, Thunder=256.
+    let probedSize = null;
+    let probedShape = null;
+    for (const size of [192, 256]) {
+      try {
+        const dummy = tf.zeros([1, size, size, 3], "int32");
+        const out = loaded.execute(dummy);
+        const outTensor = Array.isArray(out) ? out[0] : out;
+        probedShape = outTensor.shape;
+        tf.dispose([dummy, outTensor]);
+        if (validateOutputShape(probedShape)) {
+          probedSize = size;
+          break;
+        }
+      } catch (e) {
+        // wrong input size for this model; try the next one
+        continue;
+      }
+    }
+
+    if (!probedSize) {
+      throw new Error(
+        `Model output shape was [${probedShape ? probedShape.join(",") : "?"}], ` +
+        `expected [1,1,6,3]. This page only works with the PRUNED 6-keypoint ` +
+        `model from prune_movenet.py, not stock MoveNet (which outputs ` +
+        `[1,1,17,3]). Re-run the surgery script and point this at its ` +
+        `tfjs/model.json output.`
+      );
+    }
+
+    model = loaded;
+    modelInputSize = probedSize;
+    modelMeta.textContent = `model: arm6 · ${probedSize}×${probedSize} input`;
+    setStatus("model ready");
+    startBtn.disabled = false;
+    loadBtn.disabled = false;
+  } catch (err) {
+    console.error(err);
+    overlayMsg.innerHTML = `<div class="err">Failed to load model.</div><div style="font-size:10px;max-width:520px;">${escapeHtml(err.message)}</div>`;
+    overlayMsg.classList.remove("hidden");
+    setStatus("error");
+    modelMeta.textContent = "model: failed";
+    loadBtn.disabled = false;
+  }
+}
+
+function escapeHtml(s) {
+  const d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { width: 640, height: 480, facingMode: "user" },
+      audio: false,
+    });
+    video.srcObject = stream;
+    await video.play();
+
+    resizeCanvas();
+    overlayMsg.classList.add("hidden");
+    liveDot.style.display = "inline-block";
+    startBtn.disabled = true;
+    stopBtn.disabled = false;
+    setStatus("tracking");
+
+    lastFrameTime = performance.now();
+    loop();
+  } catch (err) {
+    console.error(err);
+    overlayMsg.innerHTML = `<div class="err">Could not access camera.</div><div style="font-size:10px;">${escapeHtml(err.message)}</div>`;
+    overlayMsg.classList.remove("hidden");
+  }
+}
+
+function stopCamera() {
+  if (rafId) cancelAnimationFrame(rafId);
+  if (stream) {
+    stream.getTracks().forEach((t) => t.stop());
+    stream = null;
+  }
+  liveDot.style.display = "none";
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+  setStatus("stopped");
+  overlayMsg.innerHTML = `<div>Camera stopped.</div>`;
+  overlayMsg.classList.remove("hidden");
+}
+
+function resizeCanvas() {
+  const rect = stage.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = rect.height;
+}
+window.addEventListener("resize", resizeCanvas);
+
+async function loop() {
+  if (!stream || !model) return;
+
+  const now = performance.now();
+  const dt = now - lastFrameTime;
+  lastFrameTime = now;
+  const instFps = 1000 / Math.max(dt, 1);
+  fpsSmoothed = fpsSmoothed === 0 ? instFps : fpsSmoothed * 0.9 + instFps * 0.1;
+  hudFps.textContent = `${fpsSmoothed.toFixed(0)} fps`;
+
+  const keypoints = await runInference();
+  drawSkeleton(keypoints);
+  updateReadout(keypoints);
+
+  rafId = requestAnimationFrame(loop);
+}
+
+async function runInference() {
+  return tf.tidy(() => {
+    const size = modelInputSize;
+    let img = tf.browser.fromPixels(video);
+    img = tf.image.resizeBilinear(img, [size, size]);
+    img = img.toInt().expandDims(0); // [1, size, size, 3] int32, matches model signature
+
+    const out = model.execute(img);
+    const outTensor = Array.isArray(out) ? out[0] : out;
+    const data = outTensor.dataSync(); // length 18 = 6 * [y,x,score]
+
+    const keypoints = [];
+    for (let i = 0; i < 6; i++) {
+      const y = data[i * 3 + 0];
+      const x = data[i * 3 + 1];
+      const score = data[i * 3 + 2];
+      keypoints.push({ name: ARM6_NAMES[i], y, x, score });
+    }
+    return keypoints;
+  });
+}
+
+function drawSkeleton(keypoints) {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const w = canvas.width;
+  const h = canvas.height;
+
+  const pt = (kp) => ({ px: kp.x * w, py: kp.y * h });
+
+  // Bones
+  ctx.lineWidth = 3;
+  ctx.lineCap = "round";
+  ARM6_EDGES.forEach(([a, b]) => {
+    const ka = keypoints[a], kb = keypoints[b];
+    if (ka.score < SCORE_THRESHOLD || kb.score < SCORE_THRESHOLD) return;
+    const pa = pt(ka), pb = pt(kb);
+    ctx.strokeStyle = "rgba(94,255,155,0.55)";
+    ctx.beginPath();
+    ctx.moveTo(pa.px, pa.py);
+    ctx.lineTo(pb.px, pb.py);
+    ctx.stroke();
+  });
+
+  // Joints
+  keypoints.forEach((kp) => {
+    if (kp.score < SCORE_THRESHOLD) return;
+    const { px, py } = pt(kp);
+    ctx.beginPath();
+    ctx.arc(px, py, 6, 0, Math.PI * 2);
+    ctx.fillStyle = "#5eff9b";
+    ctx.fill();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#0b0e0d";
+    ctx.stroke();
+
+    ctx.font = "10px IBM Plex Mono, monospace";
+    ctx.fillStyle = "rgba(216,230,220,0.85)";
+    ctx.save();
+    ctx.scale(-1, 1); // un-mirror text since canvas is flipped via CSS transform on the element, not here
+    ctx.fillText(kp.name.replace("_", " "), -(px + 10), py - 8);
+    ctx.restore();
+  });
+}
+
+function updateReadout(keypoints) {
+  keypoints.forEach((kp) => {
+    const el = document.getElementById(`cell-${kp.name}`);
+    if (!el) return;
+    const scoreClass = kp.score >= SCORE_THRESHOLD ? "score-good" : "score-bad";
+    el.innerHTML = `x ${kp.x.toFixed(3)}  y ${kp.y.toFixed(3)}  <span class="${scoreClass}">${kp.score.toFixed(2)}</span>`;
+  });
+}
+
+loadBtn.addEventListener("click", loadModel);
+startBtn.addEventListener("click", startCamera);
+stopBtn.addEventListener("click", stopCamera);
+
+// Allow ?model=URL in the page query string to auto-fill + auto-load,
+// handy when serving the pruned model from a local static server.
+const params = new URLSearchParams(window.location.search);
+if (params.has("model")) {
+  modelUrlInput.value = params.get("model");
+  window.addEventListener("load", () => loadModel());
+}
+</script>
+</body>
+</html>
